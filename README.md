@@ -348,14 +348,14 @@ For detailed documentation, see the [docs](./docs) folder:
 
 ### Plugin Functions
 
-| Function                  | Description                                       |
-| ------------------------- | ------------------------------------------------- |
-| `registerOpenAPI`         | Register OpenAPI/Swagger documentation            |
-| `registerOpenTelemetry`   | Register OpenTelemetry tracing                    |
-| `registerAxiomTelemetry`  | Register OpenTelemetry with Axiom backend         |
-| `getCurrentSpan`          | Get current OpenTelemetry span for custom attrs   |
-| `createOpenAPIDetail`     | Helper to create OpenAPI route details            |
-| `SecuritySchemes`         | Pre-configured security schemes (Bearer, API Key) |
+| Function                 | Description                                       |
+| ------------------------ | ------------------------------------------------- |
+| `registerOpenAPI`        | Register OpenAPI/Swagger documentation            |
+| `registerOpenTelemetry`  | Register OpenTelemetry tracing                    |
+| `registerAxiomTelemetry` | Register OpenTelemetry with Axiom backend         |
+| `getCurrentSpan`         | Get current OpenTelemetry span for custom attrs   |
+| `createOpenAPIDetail`    | Helper to create OpenAPI route details            |
+| `SecuritySchemes`        | Pre-configured security schemes (Bearer, API Key) |
 
 ## Requirements
 
