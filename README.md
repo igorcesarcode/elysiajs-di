@@ -1,7 +1,7 @@
 # ElysiaJS-DI
 
 <p align="center">
-  <img src="https://elysiajs.com/assets/elysia.svg" width="120" alt="Elysia Logo" />
+  <img src="./docs/logo.svg" width="120" alt="ElysiaJS-DI Logo" />
 </p>
 
 <p align="center">
