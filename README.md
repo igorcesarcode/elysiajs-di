@@ -33,16 +33,13 @@
 
 ## Installation
 
+This package is designed for **Bun** runtime. Install it using:
+
 ```bash
-# Using bun
 bun add @igorcesarcode/elysiajs-di reflect-metadata tsyringe
-
-# Using npm
-npm install @igorcesarcode/elysiajs-di reflect-metadata tsyringe
-
-# Using pnpm
-pnpm add @igorcesarcode/elysiajs-di reflect-metadata tsyringe
 ```
+
+> **Note:** While this package may work with Node.js, it's optimized for Bun and requires Bun >= 1.3.0.
 
 ### TypeScript Configuration
 
