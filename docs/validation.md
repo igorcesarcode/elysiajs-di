@@ -282,8 +282,8 @@ createUser({ body }: ElysiaContext<CreateUserDto>) {
 
 ```typescript
 import { z } from "zod";
-import { Controller, Get, Post, Put, Delete } from "elysiajs-di";
-import type { ElysiaContext } from "elysiajs-di";
+import { Controller, Get, Post, Put, Delete } from "@igorcesarcode/elysiajs-di";
+import type { ElysiaContext } from "@igorcesarcode/elysiajs-di";
 
 // Schemas
 const CreateUserSchema = z.object({

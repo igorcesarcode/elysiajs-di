@@ -41,7 +41,7 @@ ElysiaJS-DI provides lifecycle hooks similar to NestJS:
 Called after the module's dependencies have been resolved.
 
 ```typescript
-import { Singleton, OnModuleInit } from 'elysiajs-di'
+import { Singleton, OnModuleInit } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 class DatabaseService implements OnModuleInit {
@@ -66,7 +66,7 @@ class DatabaseService implements OnModuleInit {
 Called after all modules have been initialized, just before the application starts listening.
 
 ```typescript
-import { Singleton, OnApplicationBootstrap } from 'elysiajs-di'
+import { Singleton, OnApplicationBootstrap } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 class AppService implements OnApplicationBootstrap {
@@ -88,7 +88,7 @@ class AppService implements OnApplicationBootstrap {
 Called when the application receives a termination signal.
 
 ```typescript
-import { Singleton, OnModuleDestroy } from 'elysiajs-di'
+import { Singleton, OnModuleDestroy } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 class CacheService implements OnModuleDestroy {
@@ -110,7 +110,7 @@ class CacheService implements OnModuleDestroy {
 Called after `onModuleDestroy` but before listeners are stopped.
 
 ```typescript
-import { Singleton, BeforeApplicationShutdown } from 'elysiajs-di'
+import { Singleton, BeforeApplicationShutdown } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 class GracefulShutdown implements BeforeApplicationShutdown {
@@ -132,7 +132,7 @@ class GracefulShutdown implements BeforeApplicationShutdown {
 Called after listeners have stopped, just before the process exits.
 
 ```typescript
-import { Singleton, OnApplicationShutdown } from 'elysiajs-di'
+import { Singleton, OnApplicationShutdown } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 class DatabaseService implements OnApplicationShutdown {
@@ -205,7 +205,7 @@ import {
   OnModuleDestroy,
   BeforeApplicationShutdown,
   OnApplicationShutdown
-} from 'elysiajs-di'
+} from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 export class AppLifecycleService implements

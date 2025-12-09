@@ -35,13 +35,13 @@
 
 ```bash
 # Using bun
-bun add elysiajs-di reflect-metadata tsyringe
+bun add @igorcesarcode/elysiajs-di reflect-metadata tsyringe
 
 # Using npm
-npm install elysiajs-di reflect-metadata tsyringe
+npm install @igorcesarcode/elysiajs-di reflect-metadata tsyringe
 
 # Using pnpm
-pnpm add elysiajs-di reflect-metadata tsyringe
+pnpm add @igorcesarcode/elysiajs-di reflect-metadata tsyringe
 ```
 
 ### TypeScript Configuration
@@ -69,7 +69,7 @@ import {
   Singleton,
   ModuleFactory,
   ApplicationLogger,
-} from "elysiajs-di";
+} from "@igorcesarcode/elysiajs-di";
 import { z } from "zod";
 
 // 1. Create a Service

@@ -85,7 +85,7 @@ import { z } from 'zod'
 ### Logging
 
 ```typescript
-import { ApplicationLogger } from 'elysiajs-di'
+import { ApplicationLogger } from '@igorcesarcode/elysiajs-di'
 
 const logger = new ApplicationLogger('MyContext')
 logger.log('Info message')
@@ -120,7 +120,7 @@ logger.verbose('Verbose message')
 ```typescript
 // main.ts
 import { Elysia } from 'elysia'
-import { ModuleFactory } from 'elysiajs-di'
+import { ModuleFactory } from '@igorcesarcode/elysiajs-di'
 import { AppModule } from './app.module'
 
 const app = new Elysia()

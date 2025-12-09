@@ -260,7 +260,7 @@ modules/
 
 ```typescript
 // user.module.ts
-import { Module } from 'elysiajs-di'
+import { Module } from '@igorcesarcode/elysiajs-di'
 import { DatabaseModule } from '../database'
 import { LoggerModule } from '../shared/logger'
 import { UserController } from './user.controller'

@@ -102,7 +102,7 @@ class UserController {
 Route handlers receive the Elysia context with typed parameters:
 
 ```typescript
-import type { ElysiaContext } from 'elysiajs-di'
+import type { ElysiaContext } from '@igorcesarcode/elysiajs-di'
 
 @Controller('/users')
 class UserController {
@@ -287,8 +287,8 @@ Validation errors return 400 with details:
 
 ```typescript
 import { z } from 'zod'
-import { Controller, Get, Post, Put, Delete } from 'elysiajs-di'
-import type { ElysiaContext } from 'elysiajs-di'
+import { Controller, Get, Post, Put, Delete } from '@igorcesarcode/elysiajs-di'
+import type { ElysiaContext } from '@igorcesarcode/elysiajs-di'
 import { UserService } from './user.service'
 
 // Validation Schemas

@@ -359,7 +359,7 @@ export interface CreateUserDto {
 }
 
 // user.repository.ts
-import { Singleton, ApplicationLogger } from 'elysiajs-di'
+import { Singleton, ApplicationLogger } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 export class UserRepository {
@@ -397,7 +397,7 @@ export class UserRepository {
 }
 
 // user.service.ts
-import { Singleton, ApplicationLogger } from 'elysiajs-di'
+import { Singleton, ApplicationLogger } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 export class UserService {

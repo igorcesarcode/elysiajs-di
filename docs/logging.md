@@ -14,7 +14,7 @@ The library includes two loggers:
 Use `ApplicationLogger` in your services and controllers:
 
 ```typescript
-import { Singleton, ApplicationLogger } from 'elysiajs-di'
+import { Singleton, ApplicationLogger } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 class UserService {
@@ -207,7 +207,7 @@ The framework automatically logs:
 ## Complete Example
 
 ```typescript
-import { Singleton, ApplicationLogger, OnModuleInit } from 'elysiajs-di'
+import { Singleton, ApplicationLogger, OnModuleInit } from '@igorcesarcode/elysiajs-di'
 
 @Singleton()
 export class UserService implements OnModuleInit {
