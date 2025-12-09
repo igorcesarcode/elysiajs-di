@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build output
+/dist
+
+# Testing
+/coverage
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Package manager lock files (keep bun.lock, ignore others)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Archives and traces
+*.trace
+*.zip
+*.tar.gz
+*.tgz
+*.bun

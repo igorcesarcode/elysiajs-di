@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022"
+    ],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "types": [
+      "bun-types"
+    ]
+  },
+  "include": [
+    "index.ts",
+    "decorators/**/*.ts",
+    "factory/**/*.ts",
+    "types/**/*.ts",
+    "plugins/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "docs",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

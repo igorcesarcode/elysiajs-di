@@ -1,0 +1,93 @@
+{
+  "name": "@igorcesarcode/elysiajs-di",
+  "version": "0.0.1-beta",
+  "description": "A NestJS-inspired dependency injection and module system for ElysiaJS",
+  "author": "Igor Cesar <igorcesarcode@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "bun run clean && bun run build:types && bun run build:js",
+    "build:js": "bun build ./index.ts --outdir ./dist --target bun --format esm",
+    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist",
+    "clean": "rm -rf dist",
+    "dev": "bun run build && bun link",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "bun run test && bun run build",
+    "typecheck": "tsc --noEmit",
+    "release": "bun run test && bun run build && npm publish --access public"
+  },
+  "keywords": [
+    "elysia",
+    "elysiajs",
+    "dependency-injection",
+    "di",
+    "ioc",
+    "nestjs",
+    "decorator",
+    "module",
+    "controller",
+    "typescript",
+    "bun",
+    "openapi",
+    "swagger",
+    "opentelemetry",
+    "tracing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/igorcesarcode/elysiajs-di.git"
+  },
+  "bugs": {
+    "url": "https://github.com/igorcesarcode/elysiajs-di/issues"
+  },
+  "homepage": "https://github.com/igorcesarcode/elysiajs-di#readme",
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "peerDependencies": {
+    "elysia": ">=1.4.0",
+    "reflect-metadata": ">=0.2.0",
+    "tsyringe": ">=4.8.0",
+    "zod": ">=3.24.0"
+  },
+  "peerDependenciesMeta": {
+    "@elysiajs/openapi": {
+      "optional": true
+    },
+    "@elysiajs/opentelemetry": {
+      "optional": true
+    },
+    "@opentelemetry/sdk-trace-node": {
+      "optional": true
+    },
+    "@opentelemetry/exporter-trace-otlp-proto": {
+      "optional": true
+    },
+    "zod-to-json-schema": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}
