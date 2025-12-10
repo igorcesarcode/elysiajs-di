@@ -2,7 +2,7 @@ import { Elysia } from 'elysia'
 import 'reflect-metadata'
 import { container } from 'tsyringe'
 import { CONTROLLER_BASE_PATH_KEY, MODULE_KEY, ROUTES_KEY } from '../decorators/constants'
-import { getJWTMetadata } from '../decorators/jwt.decorator'
+import { getGuardsMetadata } from '../decorators/guards.decorator'
 import { registerCORS } from '../plugins/cors.plugin'
 import { registerCron } from '../plugins/cron.plugin'
 import { registerJWT } from '../plugins/jwt.plugin'
@@ -21,6 +21,7 @@ import {
   hasOnModuleDestroy,
   hasOnModuleInit
 } from '../types'
+import type { CanActivate, ExecutionContext } from '../types/guards'
 import { internalLogger } from './internal-logger'
 
 /**
@@ -75,6 +76,8 @@ export class ModuleFactory implements IModuleFactory {
   private registeredModules = new Set<Constructor>()
   private registeredInstances: RegisteredInstance[] = []
   private isShuttingDown = false
+  private mainApp: Elysia | null = null
+  private jwtPluginConfig: import('../plugins/jwt.plugin').JWTConfig | null = null
 
   private options: BootstrapOptions = {
     verbose: true,
@@ -247,6 +250,11 @@ export class ModuleFactory implements IModuleFactory {
       return
     }
 
+    // Store reference to main app for plugin access
+    if (!this.mainApp) {
+      this.mainApp = app
+    }
+
     this.registeredModules.add(moduleClass)
 
     const metadata: ModuleMetadata = Reflect.getMetadata(MODULE_KEY, moduleClass)
@@ -279,7 +287,11 @@ export class ModuleFactory implements IModuleFactory {
     // 3. Auto-register plugins if configured
     if (metadata.plugins) {
       if (metadata.plugins.jwt) {
+        // Register JWT plugin on main app and store the config for controller plugins
         await registerJWT(app, metadata.plugins.jwt)
+        // Store config for creating new plugin instances for controller plugins
+        this.jwtPluginConfig = metadata.plugins.jwt
+        internalLogger.log('ModuleFactory', 'JWT plugin registered and config stored for controller plugins')
       }
       if (metadata.plugins.cors) {
         await registerCORS(app, metadata.plugins.cors)
@@ -291,10 +303,10 @@ export class ModuleFactory implements IModuleFactory {
 
     // 4. Register controllers and their routes using Elysia plugins
     if (metadata.controllers) {
-      metadata.controllers.forEach(controllerClass => {
-        const controllerPlugin = this.createControllerPlugin(controllerClass, moduleClass)
+      for (const controllerClass of metadata.controllers) {
+        const controllerPlugin = await this.createControllerPlugin(controllerClass, moduleClass)
         app.use(controllerPlugin)
-      })
+      }
     }
 
     // 5. Register module instance for lifecycle (if it has lifecycle hooks)
@@ -308,7 +320,7 @@ export class ModuleFactory implements IModuleFactory {
   /**
    * Create an Elysia plugin for a controller
    */
-  private createControllerPlugin(controllerClass: Constructor, _parentModule: Constructor): Elysia {
+  private async createControllerPlugin(controllerClass: Constructor, _parentModule: Constructor): Promise<Elysia> {
     const basePath = Reflect.getMetadata(CONTROLLER_BASE_PATH_KEY, controllerClass) || ''
     const routes: RouteMetadata[] = Reflect.getMetadata(ROUTES_KEY, controllerClass) || []
 
@@ -324,7 +336,23 @@ export class ModuleFactory implements IModuleFactory {
     this.registerInstance(controllerInstance, 'controller', controllerClass)
 
     // Create a new Elysia instance as a plugin
+    // In Elysia, when you use app.use(plugin), the plugin should inherit context from parent
+    // However, to ensure JWT plugin is available in guard context, we need to apply it explicitly
+    // IMPORTANT: The JWT plugin must be applied BEFORE registering routes so it's available in the context
     const plugin = new Elysia()
+
+    // Apply JWT plugin to controller plugin if it exists
+    // This ensures JWT plugin is available in the context when guards are executed
+    // We create a new instance for each controller plugin to ensure it works correctly
+    // (Elysia plugins are tied to their app instance, so we can't reuse the main app's instance)
+    if (this.jwtPluginConfig) {
+      const { createJWTPlugin } = await import('../plugins/jwt.plugin')
+      const jwtPlugin = await createJWTPlugin(this.jwtPluginConfig)
+      plugin.use(jwtPlugin)
+      internalLogger.log('ModuleFactory', `JWT plugin created and applied to ${controllerClass.name} plugin`)
+    } else {
+      internalLogger.warn('ModuleFactory', `Warning: JWT plugin not available for ${controllerClass.name}`)
+    }
 
     // Log controller registration
     if (routes.length > 0) {
@@ -336,11 +364,11 @@ export class ModuleFactory implements IModuleFactory {
       const fullPath = basePath + route.path
       const handler = (controllerInstance as any)[route.handlerName].bind(controllerInstance)
 
-      // Check if route requires JWT
-      const jwtMetadata = getJWTMetadata(controllerClass.prototype, route.handlerName)
+      // Get guards for this route (from route metadata or method metadata)
+      const guards = route.guards || getGuardsMetadata(controllerClass.prototype, route.handlerName) || []
 
       // Build route options with validation schemas and OpenAPI detail
-      const routeConfig: Record<string, any> = {}
+      const routeConfig: Record<string, unknown> = {}
 
       if (route.options) {
         if (route.options.body) routeConfig.body = route.options.body
@@ -351,51 +379,63 @@ export class ModuleFactory implements IModuleFactory {
         if (route.options.detail) routeConfig.detail = route.options.detail
       }
 
-      // Create route handler with JWT protection if needed
-      let routeHandler = handler
-
-      if (jwtMetadata) {
-        const jwtName = jwtMetadata.name
-        routeHandler = async (context: any) => {
-          // Get JWT plugin from context (Elysia JWT plugin adds jwt object with sign/verify methods)
-          const jwtPlugin = (context as any)[jwtName]
-
-          if (!jwtPlugin || typeof jwtPlugin.verify !== 'function') {
-            context.set.status = 401
-            return { error: 'JWT plugin not registered' }
-          }
-
-          // Extract token from Authorization header
-          const authHeader = context.headers.authorization || context.headers.Authorization
-          const token = authHeader?.replace(/^Bearer\s+/i, '')
-
-          if (!token && jwtMetadata.required) {
-            context.set.status = 401
-            return { error: 'Unauthorized: JWT token required' }
-          }
-
-          if (token) {
-            // Verify token
-            const verified = await jwtPlugin.verify(token)
-
-            if (!verified && jwtMetadata.required) {
-              context.set.status = 401
-              return { error: 'Unauthorized: Invalid JWT token' }
-            }
-
-            // Attach verified payload to context (merge with jwt object for convenience)
-            if (verified) {
-              // Merge verified payload into jwt object so handler can access both payload and sign method
-              Object.assign(jwtPlugin, verified)
-            } else if (jwtMetadata.required) {
-              context.set.status = 401
-              return { error: 'Unauthorized: Invalid JWT token' }
-            }
-          }
-
-          // Call original handler
-          return handler(context)
+      // Create route handler with guard execution
+      // The context will have JWT plugin attached by Elysia's plugin system
+      // We ensure the context has access to all plugins from the main app
+      const routeHandler = async (context: {
+        params: Record<string, string>
+        query: Record<string, string | undefined>
+        body: unknown
+        headers: Record<string, string | undefined>
+        request: Request
+        set: {
+          status?: number
+          headers: Record<string, string>
         }
+        [key: string]: unknown
+      }) => {
+        // Execute guards if any
+        if (guards.length > 0) {
+          // Create execution context
+          const executionContext: ExecutionContext = {
+            context,
+            handler: route.handlerName,
+            controller: controllerClass,
+            controllerInstance,
+            data: {}
+          }
+
+          // Execute each guard in order
+          for (const GuardClass of guards) {
+            // Register guard in DI container if not already registered
+            if (!container.isRegistered(GuardClass)) {
+              container.register(GuardClass, { useClass: GuardClass })
+            }
+
+            // Resolve guard instance with dependencies
+            const guard = container.resolve<CanActivate>(GuardClass)
+
+            // Execute guard
+            const canActivate = await guard.canActivate(executionContext)
+
+            if (!canActivate) {
+              // Preserve status code set by guard (401, 403, etc.)
+              // If guard didn't set a status, default to 401
+              if (!context.set.status) {
+                context.set.status = 401
+              }
+              return { error: 'Unauthorized' }
+            }
+          }
+
+          // Merge guard data into context for handler access
+          if (executionContext.data) {
+            Object.assign(context, executionContext.data)
+          }
+        }
+
+        // Call original handler
+        return handler(context)
       }
 
       // Register route in the plugin with or without validation
@@ -406,8 +446,8 @@ export class ModuleFactory implements IModuleFactory {
       }
 
       // Log route mapping
-      const jwtInfo = jwtMetadata ? ' [JWT Protected]' : ''
-      internalLogger.log('RouterExplorer', `Mapped {${fullPath}, ${route.method.toUpperCase()}} route${jwtInfo}`)
+      const guardsInfo = guards.length > 0 ? ` [${guards.length} guard(s)]` : ''
+      internalLogger.log('RouterExplorer', `Mapped {${fullPath}, ${route.method.toUpperCase()}} route${guardsInfo}`)
     })
 
     return plugin
@@ -486,6 +526,8 @@ export class ModuleFactory implements IModuleFactory {
     this.registeredModules.clear()
     this.registeredInstances = []
     this.isShuttingDown = false
+    this.mainApp = null
+    this.jwtPluginConfig = null
     container.clearInstances()
   }
 

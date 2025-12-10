@@ -6,6 +6,8 @@
 
 import type { Elysia } from 'elysia'
 import { internalLogger } from '../factory/internal-logger'
+import { container } from 'tsyringe'
+import { JwtService } from '../services/jwt.service'
 
 /**
  * JWT plugin configuration
@@ -90,33 +92,48 @@ export interface JWTConfig {
  * })
  * ```
  */
+/**
+ * Create a JWT plugin instance (without applying to app)
+ * Useful for creating plugin instances for controller plugins
+ */
+export async function createJWTPlugin(config: JWTConfig): Promise<Elysia> {
+  const { jwt } = await import('@elysiajs/jwt')
+
+  const jwtConfig = {
+    name: config.name || 'jwt',
+    secret: config.secret,
+    ...(config.alg !== undefined && { alg: config.alg }),
+    ...(config.schema !== undefined && { schema: config.schema }),
+    ...(config.iss !== undefined && { iss: config.iss }),
+    ...(config.sub !== undefined && { sub: config.sub }),
+    ...(config.aud !== undefined && { aud: config.aud }),
+    ...(config.jti !== undefined && { jti: config.jti }),
+    ...(config.nbf !== undefined && { nbf: config.nbf }),
+    ...(config.exp !== undefined && { exp: config.exp }),
+    ...(config.crit !== undefined && { crit: config.crit })
+  }
+
+  // Type assertion needed because our config is compatible but TypeScript can't infer it
+  return jwt(jwtConfig as Parameters<typeof jwt>[0])
+}
+
 export async function registerJWT(
   app: Elysia,
   config: JWTConfig
-): Promise<void> {
+): Promise<Elysia> {
   try {
-    const { jwt } = await import('@elysiajs/jwt')
-
-    const jwtConfig = {
-      name: config.name || 'jwt',
-      secret: config.secret,
-      ...(config.alg !== undefined && { alg: config.alg }),
-      ...(config.schema !== undefined && { schema: config.schema }),
-      ...(config.iss !== undefined && { iss: config.iss }),
-      ...(config.sub !== undefined && { sub: config.sub }),
-      ...(config.aud !== undefined && { aud: config.aud }),
-      ...(config.jti !== undefined && { jti: config.jti }),
-      ...(config.nbf !== undefined && { nbf: config.nbf }),
-      ...(config.exp !== undefined && { exp: config.exp }),
-      ...(config.crit !== undefined && { crit: config.crit })
-    }
-
-    // Type assertion needed because our config is compatible but TypeScript can't infer it
-    const jwtPlugin = jwt(jwtConfig as Parameters<typeof jwt>[0])
+    const jwtPlugin = await createJWTPlugin(config)
 
     app.use(jwtPlugin)
 
+    // Configure JwtService with plugin name
+    const jwtService = container.resolve(JwtService)
+    jwtService.setJwtPluginName(config.name || 'jwt')
+
     internalLogger.log('JWTPlugin', `JWT plugin registered with name: ${config.name || 'jwt'}`)
+
+    // Return the plugin instance so it can be reused in controller plugins
+    return jwtPlugin
   } catch (error) {
     const err = error as { code?: string }
     if (err?.code === 'MODULE_NOT_FOUND') {
