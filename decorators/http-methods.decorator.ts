@@ -1,6 +1,8 @@
 import 'reflect-metadata'
-import { ROUTES_KEY } from './constants'
+import { ROUTES_KEY, GUARDS_KEY } from './constants'
 import type { RouteMetadata, RouteOptions } from '../types'
+import type { CanActivate } from '../types/guards'
+import type { Constructor } from '../types'
 
 /**
  * Creates a route decorator for HTTP methods with optional validation and OpenAPI documentation
@@ -14,11 +16,15 @@ function createRouteDecorator(
   return function (target: Object, propertyKey: string | symbol) {
     const routes: RouteMetadata[] = Reflect.getMetadata(ROUTES_KEY, target.constructor) || []
 
+    // Get guards from method metadata if they exist
+    const guards = Reflect.getMetadata(GUARDS_KEY, target, propertyKey) as Constructor<CanActivate>[] | undefined
+
     routes.push({
       method,
       path,
       handlerName: String(propertyKey),
-      options
+      options,
+      guards
     })
 
     Reflect.defineMetadata(ROUTES_KEY, routes, target.constructor)

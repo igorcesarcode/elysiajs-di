@@ -3,6 +3,7 @@ import type { ZodType } from 'zod'
 import type { CORSConfig } from '../plugins/cors.plugin'
 import type { CronConfig } from '../plugins/cron.plugin'
 import type { JWTConfig } from '../plugins/jwt.plugin'
+import type { CanActivate } from './guards'
 
 /**
  * OpenAPI route detail configuration
@@ -58,6 +59,8 @@ export interface RouteMetadata {
   path: string
   handlerName: string
   options?: RouteOptions
+  /** Guards to execute before the route handler */
+  guards?: Constructor<CanActivate>[]
 }
 
 /**

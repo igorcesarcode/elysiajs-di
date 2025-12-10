@@ -3,4 +3,6 @@ export * from './module.decorator'
 export * from './controller.decorator'
 export * from './http-methods.decorator'
 export * from './di.decorator'
+export * from './guards.decorator'
+// @deprecated Use @UseGuards(AuthGuard) instead
 export * from './jwt.decorator'

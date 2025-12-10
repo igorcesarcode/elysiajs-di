@@ -75,15 +75,19 @@ import 'reflect-metadata'
 
 // Types
 export * from './types'
+export type { CanActivate, ExecutionContext } from './types/guards'
 
 // Decorators
 export {
   Controller, CONTROLLER_BASE_PATH_KEY, Delete, Get, Injectable, JWT, JWT_REQUIRED_KEY, Module, MODULE_KEY, Patch, Post,
-  Put, ROUTES_KEY, Singleton
+  Put, ROUTES_KEY, Singleton, UseGuards
 } from './decorators'
 
 // Factory
 export { ApplicationLogger, createModuleFactory, ModuleFactory } from './factory'
+
+// Services
+export { JwtService } from './services/jwt.service'
 
 // Plugins (OpenAPI, OpenTelemetry, JWT, CORS, Cron)
 export {

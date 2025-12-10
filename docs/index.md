@@ -19,6 +19,9 @@ Welcome to the ElysiaJS-DI documentation. This library brings NestJS-style archi
    - [Lifecycle Hooks](./lifecycle.md)
    - [Logging](./logging.md)
 
+4. [Troubleshooting](./troubleshooting-auth-guard.md)
+   - [AuthGuard JWT Authentication Issues](./troubleshooting-auth-guard.md)
+
 ## Quick Reference
 
 ### Decorators
