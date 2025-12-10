@@ -9,6 +9,18 @@ on:
         description: "Version to publish (e.g., 0.0.2-beta, 1.0.0)"
         required: false
         type: string
+      npm_tag:
+        description: "npm dist-tag to use (latest, beta, alpha, rc, canary). Leave empty for auto-detection based on version."
+        required: false
+        type: choice
+        options:
+          - ""
+          - latest
+          - beta
+          - alpha
+          - rc
+          - canary
+        default: ""
 
 jobs:
   test:
@@ -72,17 +84,28 @@ jobs:
         id: npm-tag
         run: |
           VERSION="${{ steps.package-version.outputs.version }}"
-          if [[ "$VERSION" == *"-beta"* ]]; then
-            echo "tag=beta" >> $GITHUB_OUTPUT
-          elif [[ "$VERSION" == *"-alpha"* ]]; then
-            echo "tag=alpha" >> $GITHUB_OUTPUT
-          elif [[ "$VERSION" == *"-rc"* ]]; then
-            echo "tag=rc" >> $GITHUB_OUTPUT
-          elif [[ "$VERSION" == *"-canary"* ]]; then
-            echo "tag=canary" >> $GITHUB_OUTPUT
+          MANUAL_TAG="${{ github.event.inputs.npm_tag }}"
+          
+          # If manual tag is provided, use it
+          if [ -n "$MANUAL_TAG" ]; then
+            echo "tag=$MANUAL_TAG" >> $GITHUB_OUTPUT
+            echo "✅ Using manually specified tag: $MANUAL_TAG"
           else
-            echo "tag=latest" >> $GITHUB_OUTPUT
+            # Auto-detect based on version
+            if [[ "$VERSION" == *"-beta"* ]]; then
+              echo "tag=beta" >> $GITHUB_OUTPUT
+            elif [[ "$VERSION" == *"-alpha"* ]]; then
+              echo "tag=alpha" >> $GITHUB_OUTPUT
+            elif [[ "$VERSION" == *"-rc"* ]]; then
+              echo "tag=rc" >> $GITHUB_OUTPUT
+            elif [[ "$VERSION" == *"-canary"* ]]; then
+              echo "tag=canary" >> $GITHUB_OUTPUT
+            else
+              echo "tag=latest" >> $GITHUB_OUTPUT
+            fi
+            echo "✅ Auto-detected tag based on version"
           fi
+          
           echo "📦 Version: $VERSION"
           echo "🏷️  Tag: $(grep tag= $GITHUB_OUTPUT | cut -d= -f2)"
 
@@ -97,4 +120,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** \`${{ steps.package-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ steps.npm-tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ github.event.inputs.npm_tag }}" ]; then
+            echo "- **Tag Source:** Manual (specified in workflow)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Tag Source:** Auto-detected from version" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- **Registry:** https://www.npmjs.com/package/@igorcesarcode/elysiajs-di" >> $GITHUB_STEP_SUMMARY

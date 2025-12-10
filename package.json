@@ -1,6 +1,6 @@
 {
   "name": "@igorcesarcode/elysiajs-di",
-  "version": "0.0.8-beta",
+  "version": "0.0.9-beta",
   "description": "A NestJS-inspired dependency injection and module system for ElysiaJS",
   "author": "Igor Cesar <igorcesarcode@gmail.com>",
   "license": "MIT",
