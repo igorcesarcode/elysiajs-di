@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.7-beta] - 2024-12-10
+
+### Fixed
+- **AuthGuard JWT Authentication**: Fixed critical bug where AuthGuard was always returning 401 even with valid tokens
+  - Fixed header extraction to read from multiple sources (`context.headers`, `context.request.headers`)
+  - Improved token extraction to handle different header formats in ElysiaJS
+  - Added validation to require "Bearer" prefix in Authorization header for security
+- **JWT Plugin Availability**: Fixed JWT plugin not being available in guard execution context
+  - Store JWT plugin instance when registered on main app
+  - Apply JWT plugin to controller plugins to ensure availability in guard context
+  - Improved plugin instance management in ModuleFactory
+
+### Added
+- **Guards System**: Complete guards implementation similar to NestJS
+  - `@UseGuards()` decorator for route protection
+  - `CanActivate` interface for guard implementation
+  - `ExecutionContext` interface for guard access to request context
+  - Support for multiple guards on same route
+- **JWT Service**: Comprehensive JWT service for token management
+  - `JwtService` class with sign/verify methods
+  - `extractToken()` method for extracting tokens from headers
+  - `extractTokenFromContext()` method for Elysia context
+  - `verifyFromContext()` convenience method
+  - Automatic plugin name configuration
+- **Enhanced Error Handling**: Improved error handling in AuthGuard
+  - Distinguish between different error types (401 vs 500)
+  - Better error messages for debugging
+  - Proper handling of JWT plugin unavailability
+
+### Changed
+- **AuthGuard Simplification**: Simplified AuthGuard implementation
+  - Moved complex header reading logic to JwtService
+  - Cleaner, more maintainable code similar to NestJS pattern
+  - Better separation of concerns
+- **ModuleFactory**: Enhanced plugin management
+  - Store JWT plugin instance for reuse
+  - Apply plugins to controller plugins automatically
+  - Improved reset() method to clear plugin instances
+
+### Documentation
+- Added troubleshooting guide for AuthGuard JWT issues
+- Comprehensive documentation of problem and solution
+- Updated main documentation index
+
+## [Unreleased]
+
 ### Added
 - Initial release of ElysiaJS-DI
 
