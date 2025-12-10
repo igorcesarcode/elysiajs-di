@@ -419,7 +419,11 @@ export class ModuleFactory implements IModuleFactory {
             const canActivate = await guard.canActivate(executionContext)
 
             if (!canActivate) {
-              context.set.status = 401
+              // Preserve status code set by guard (401, 403, etc.)
+              // If guard didn't set a status, default to 401
+              if (!context.set.status) {
+                context.set.status = 401
+              }
               return { error: 'Unauthorized' }
             }
           }
