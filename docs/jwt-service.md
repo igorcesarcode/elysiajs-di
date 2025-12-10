@@ -24,17 +24,17 @@ bun add @elysiajs/jwt
 Register the JWT plugin in your module:
 
 ```typescript
-import { Module } from '@igorcesarcode/elysiajs-di'
+import { Module } from "@igorcesarcode/elysiajs-di";
 
 @Module({
   controllers: [AuthController],
   providers: [AuthService, AuthGuard, JwtService],
   plugins: {
     jwt: {
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      name: 'jwt' // Optional, defaults to 'jwt'
-    }
-  }
+      secret: process.env.JWT_SECRET || "your-secret-key",
+      name: "jwt", // Optional, defaults to 'jwt'
+    },
+  },
 })
 export class AuthModule {}
 ```
@@ -44,11 +44,11 @@ export class AuthModule {}
 ### Injecting JwtService
 
 ```typescript
-import { Injectable, JwtService } from '@igorcesarcode/elysiajs-di'
+import { Injectable, JwtService } from "@igorcesarcode/elysiajs-di";
 
 @Injectable()
 export class AuthController {
-  constructor(private jwtService: JwtService) { }
+  constructor(private jwtService: JwtService) {}
 }
 ```
 
@@ -84,29 +84,29 @@ async login({ body, jwt }: any) {
 Verify a token in a guard:
 
 ```typescript
-import type { CanActivate, ExecutionContext } from '@igorcesarcode/elysiajs-di'
-import { Injectable, JwtService } from '@igorcesarcode/elysiajs-di'
+import type { CanActivate, ExecutionContext } from "@igorcesarcode/elysiajs-di";
+import { Injectable, JwtService } from "@igorcesarcode/elysiajs-di";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) { }
+  constructor(private jwtService: JwtService) {}
 
   async canActivate(executionContext: ExecutionContext): Promise<boolean> {
-    const { context } = executionContext
+    const { context } = executionContext;
 
     // Extract and verify token
-    const payload = await this.jwtService.verifyFromContext(context)
+    const payload = await this.jwtService.verifyFromContext(context);
 
     if (!payload) {
-      context.set.status = 401
-      return false
+      context.set.status = 401;
+      return false;
     }
 
     // Use payload data
-    const userId = (payload as { userId: number }).userId
+    const userId = (payload as { userId: number }).userId;
     // ...
 
-    return true
+    return true;
   }
 }
 ```
@@ -118,6 +118,7 @@ export class AuthGuard implements CanActivate {
 Signs a JWT token with the given payload.
 
 **Parameters:**
+
 - `payload: Record<string, unknown>` - Data to encode in the token
 - `context: { [key: string]: unknown }` - Elysia context (must have JWT plugin)
 
@@ -126,11 +127,12 @@ Signs a JWT token with the given payload.
 **Throws:** Error if JWT plugin is not available in context
 
 **Example:**
+
 ```typescript
 const token = await jwtService.sign(
-  { userId: 1, email: 'user@example.com' },
+  { userId: 1, email: "user@example.com" },
   { jwt }
-)
+);
 ```
 
 ### `verify(token, context)`
@@ -138,16 +140,18 @@ const token = await jwtService.sign(
 Verifies and decodes a JWT token.
 
 **Parameters:**
+
 - `token: string` - JWT token to verify
 - `context: { [key: string]: unknown }` - Elysia context (must have JWT plugin)
 
 **Returns:** `Promise<unknown | null>` - Decoded payload if valid, null if invalid
 
 **Example:**
+
 ```typescript
-const payload = await jwtService.verify(token, context)
+const payload = await jwtService.verify(token, context);
 if (payload) {
-  const userId = (payload as { userId: number }).userId
+  const userId = (payload as { userId: number }).userId;
 }
 ```
 
@@ -156,13 +160,15 @@ if (payload) {
 Convenience method that extracts and verifies token from context.
 
 **Parameters:**
+
 - `context: { [key: string]: unknown }` - Elysia context
 
 **Returns:** `Promise<unknown | null>` - Decoded payload if valid, null if invalid
 
 **Example:**
+
 ```typescript
-const payload = await jwtService.verifyFromContext(context)
+const payload = await jwtService.verifyFromContext(context);
 ```
 
 ### `extractToken(headers)`
@@ -170,13 +176,15 @@ const payload = await jwtService.verifyFromContext(context)
 Extracts token from Authorization header.
 
 **Parameters:**
+
 - `headers: Record<string, string | undefined>` - Request headers
 
 **Returns:** `string | null` - Token if found, null otherwise
 
 **Example:**
+
 ```typescript
-const token = jwtService.extractToken(headers)
+const token = jwtService.extractToken(headers);
 ```
 
 ### `extractTokenFromContext(context)`
@@ -184,13 +192,15 @@ const token = jwtService.extractToken(headers)
 Extracts token from Elysia context, handling multiple header sources.
 
 **Parameters:**
+
 - `context: { headers?: Record<string, string | undefined>, request?: Request, [key: string]: unknown }` - Elysia context
 
 **Returns:** `string | null` - Token if found, null otherwise
 
 **Example:**
+
 ```typescript
-const token = jwtService.extractTokenFromContext(context)
+const token = jwtService.extractTokenFromContext(context);
 ```
 
 ## Header Extraction
@@ -224,7 +234,7 @@ Always use environment variables for JWT secrets:
 ```typescript
 plugins: {
   jwt: {
-    secret: process.env.JWT_SECRET || 'fallback-secret'
+    secret: process.env.JWT_SECRET || "fallback-secret";
   }
 }
 ```
@@ -237,68 +247,77 @@ Here's a complete authentication flow using JwtService:
 
 ```typescript
 // auth.controller.ts
-import { Controller, Post, Get, UseGuards, JwtService } from '@igorcesarcode/elysiajs-di'
-import { AuthService } from './auth.service'
-import { AuthGuard } from './auth.guard'
+import {
+  Controller,
+  Post,
+  Get,
+  UseGuards,
+  JwtService,
+} from "@igorcesarcode/elysiajs-di";
+import { AuthService } from "./auth.service";
+import { AuthGuard } from "./auth.guard";
 
-@Controller('/auth')
+@Controller("/auth")
 export class AuthController {
   constructor(
     private authService: AuthService,
     private jwtService: JwtService
-  ) { }
+  ) {}
 
-  @Post('/login')
+  @Post("/login")
   async login({ body, jwt }: any) {
-    const user = await this.authService.authenticate(body.email, body.password)
+    const user = await this.authService.authenticate(body.email, body.password);
 
     if (!user) {
-      return { error: 'Invalid credentials' }
+      return { error: "Invalid credentials" };
     }
 
-    const token = await this.jwtService.sign({
-      userId: user.id,
-      email: user.email
-    }, { jwt })
+    const token = await this.jwtService.sign(
+      {
+        userId: user.id,
+        email: user.email,
+      },
+      { jwt }
+    );
 
-    return { token, user }
+    return { token, user };
   }
 
   @UseGuards(AuthGuard)
-  @Get('/profile')
+  @Get("/profile")
   async getProfile({ user, jwt }: any) {
-    return { user, tokenData: jwt }
+    return { user, tokenData: jwt };
   }
 }
 ```
 
 ```typescript
 // auth.guard.ts
-import type { CanActivate, ExecutionContext } from '@igorcesarcode/elysiajs-di'
-import { Injectable, JwtService } from '@igorcesarcode/elysiajs-di'
+import type { CanActivate, ExecutionContext } from "@igorcesarcode/elysiajs-di";
+import { Injectable, JwtService } from "@igorcesarcode/elysiajs-di";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) { }
+  constructor(private jwtService: JwtService) {}
 
   async canActivate(executionContext: ExecutionContext): Promise<boolean> {
-    const { context } = executionContext
+    const { context } = executionContext;
 
-    const payload = await this.jwtService.verifyFromContext(context)
+    const payload = await this.jwtService.verifyFromContext(context);
 
-    if (!payload || typeof payload !== 'object' || !('userId' in payload)) {
-      context.set.status = 401
-      return false
+    if (!payload || typeof payload !== "object" || !("userId" in payload)) {
+      context.set.status = 401;
+      return false;
     }
 
     // Attach payload to context
     if (!executionContext.data) {
-      executionContext.data = {}
+      executionContext.data = {};
     }
-    executionContext.data.jwt = payload
-    ; (context as { jwt?: unknown }).jwt = payload
+    executionContext.data.jwt = payload;
+    (context as { jwt?: unknown }).jwt = payload;
 
-    return true
+    return true;
   }
 }
 ```
@@ -308,7 +327,7 @@ export class AuthGuard implements CanActivate {
 If you encounter issues, see the [Troubleshooting Guide](./troubleshooting-auth-guard.md).
 
 Common issues:
+
 - **JWT plugin not found**: Ensure JWT plugin is registered in module
 - **Token extraction fails**: Use `extractTokenFromContext()` instead of `extractToken()`
 - **Headers not accessible**: The service handles multiple header sources automatically
-

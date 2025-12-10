@@ -5,16 +5,19 @@ Welcome to the ElysiaJS-DI documentation. This library brings NestJS-style archi
 ## Table of Contents
 
 1. [Getting Started](./getting-started.md)
+
    - Installation
    - Configuration
    - First Module
 
 2. [Core Concepts](./modules.md)
+
    - [Modules](./modules.md)
    - [Controllers](./controllers.md)
    - [Providers](./providers.md)
 
 3. [Features](./validation.md)
+
    - [Validation](./validation.md)
    - [Guards](./guards.md)
    - [JWT Service](./jwt-service.md)
@@ -55,23 +58,23 @@ Welcome to the ElysiaJS-DI documentation. This library brings NestJS-style archi
 
 ```typescript
 interface OnModuleInit {
-  onModuleInit(): Promise<void> | void
+  onModuleInit(): Promise<void> | void;
 }
 
 interface OnApplicationBootstrap {
-  onApplicationBootstrap(): Promise<void> | void
+  onApplicationBootstrap(): Promise<void> | void;
 }
 
 interface OnModuleDestroy {
-  onModuleDestroy(): Promise<void> | void
+  onModuleDestroy(): Promise<void> | void;
 }
 
 interface BeforeApplicationShutdown {
-  beforeApplicationShutdown(signal?: string): Promise<void> | void
+  beforeApplicationShutdown(signal?: string): Promise<void> | void;
 }
 
 interface OnApplicationShutdown {
-  onApplicationShutdown(signal?: string): Promise<void> | void
+  onApplicationShutdown(signal?: string): Promise<void> | void;
 }
 ```
 
@@ -91,14 +94,14 @@ import { z } from 'zod'
 ### Logging
 
 ```typescript
-import { ApplicationLogger } from '@igorcesarcode/elysiajs-di'
+import { ApplicationLogger } from "@igorcesarcode/elysiajs-di";
 
-const logger = new ApplicationLogger('MyContext')
-logger.log('Info message')
-logger.warn('Warning message')
-logger.error('Error message')
-logger.debug('Debug message')
-logger.verbose('Verbose message')
+const logger = new ApplicationLogger("MyContext");
+logger.log("Info message");
+logger.warn("Warning message");
+logger.error("Error message");
+logger.debug("Debug message");
+logger.verbose("Verbose message");
 ```
 
 ## Architecture Overview
@@ -125,28 +128,27 @@ logger.verbose('Verbose message')
 
 ```typescript
 // main.ts
-import { Elysia } from 'elysia'
-import { ModuleFactory } from '@igorcesarcode/elysiajs-di'
-import { AppModule } from './app.module'
+import { Elysia } from "elysia";
+import { ModuleFactory } from "@igorcesarcode/elysiajs-di";
+import { AppModule } from "./app.module";
 
-const app = new Elysia()
-const factory = new ModuleFactory()
+const app = new Elysia();
+const factory = new ModuleFactory();
 
-await factory.bootstrap(AppModule, app)
+await factory.bootstrap(AppModule, app);
 
 app.listen(3000, () => {
-  console.log('🚀 Server running at http://localhost:3000')
-})
+  console.log("🚀 Server running at http://localhost:3000");
+});
 ```
 
 ## Version Compatibility
 
 | ElysiaJS-DI | ElysiaJS | Node.js | TypeScript |
-|-------------|----------|---------|------------|
+| ----------- | -------- | ------- | ---------- |
 | 1.x         | ≥1.0     | ≥18     | ≥5.0       |
 
 ## Support
 
 - [GitHub Issues](https://github.com/your-repo/elysiajs-di/issues)
 - [Contributing Guide](../CONTRIBUTING.md)
-

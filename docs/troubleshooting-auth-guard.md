@@ -34,8 +34,8 @@ O código original do `AuthGuard` estava tentando ler os headers apenas de `cont
 
 ```typescript
 // ❌ Código original (não funcionava)
-const headers = elysiaContext.headers || {}
-const token = this.jwtService.extractToken(headers)
+const headers = elysiaContext.headers || {};
+const token = this.jwtService.extractToken(headers);
 // headers estava vazio: []
 ```
 
@@ -49,30 +49,34 @@ Modificamos o `AuthGuard` para ler headers de múltiplas fontes e mesclá-los:
 // ✅ Código corrigido
 // Extract token from Authorization header
 // In Elysia, headers can be in context.headers or context.request.headers
-const headers = elysiaContext.headers || {}
-const requestHeaders = elysiaContext.request?.headers || {}
+const headers = elysiaContext.headers || {};
+const requestHeaders = elysiaContext.request?.headers || {};
 
 // Merge both sources of headers (Elysia may use either)
 const allHeaders: Record<string, string | undefined> = {
   ...headers,
   ...Object.fromEntries(
-    Array.from(requestHeaders.entries() || []).map(([k, v]) => [k.toLowerCase(), v])
-  )
-}
+    Array.from(requestHeaders.entries() || []).map(([k, v]) => [
+      k.toLowerCase(),
+      v,
+    ])
+  ),
+};
 
 // Also check the raw request headers
 if (elysiaContext.request) {
-  const rawHeaders = elysiaContext.request.headers
+  const rawHeaders = elysiaContext.request.headers;
   if (rawHeaders) {
-    const authHeader = rawHeaders.get?.('authorization') || rawHeaders.get?.('Authorization')
+    const authHeader =
+      rawHeaders.get?.("authorization") || rawHeaders.get?.("Authorization");
     if (authHeader) {
-      allHeaders.authorization = authHeader
-      allHeaders.Authorization = authHeader
+      allHeaders.authorization = authHeader;
+      allHeaders.Authorization = authHeader;
     }
   }
 }
 
-const token = this.jwtService.extractToken(allHeaders)
+const token = this.jwtService.extractToken(allHeaders);
 ```
 
 ### 2. Melhorias Adicionais
@@ -134,6 +138,7 @@ curl -X POST http://localhost:3000/auth/login \
 ```
 
 **Resultado esperado:**
+
 ```json
 {
   "success": true,
@@ -155,6 +160,7 @@ curl -X GET http://localhost:3000/auth/profile \
 ```
 
 **Resultado esperado:**
+
 ```json
 {
   "success": true,
@@ -179,11 +185,13 @@ curl -X GET http://localhost:3000/auth/profile
 ```
 
 **Resultado esperado:**
+
 ```json
 {
   "error": "Unauthorized"
 }
 ```
+
 **Status HTTP:** `401 Unauthorized`
 
 ### 4. Teste de Rota Protegida com Token Inválido
@@ -194,11 +202,13 @@ curl -X GET http://localhost:3000/auth/profile \
 ```
 
 **Resultado esperado:**
+
 ```json
 {
   "error": "Unauthorized"
 }
 ```
+
 **Status HTTP:** `401 Unauthorized`
 
 ## Lições Aprendidas
@@ -206,6 +216,7 @@ curl -X GET http://localhost:3000/auth/profile \
 ### 1. Headers no ElysiaJS
 
 No ElysiaJS, os headers podem estar em diferentes locais do contexto. Sempre verifique:
+
 - `context.headers`
 - `context.request.headers`
 - Use métodos como `get()` para acessar headers do objeto Request nativo
@@ -213,6 +224,7 @@ No ElysiaJS, os headers podem estar em diferentes locais do contexto. Sempre ver
 ### 2. Debugging Eficaz
 
 Use logs de debug estratégicos para identificar onde o problema realmente está:
+
 - Não assuma que o problema está onde você pensa que está
 - Verifique cada etapa do fluxo (extração de token, verificação, etc.)
 - Use logs para inspecionar a estrutura dos objetos
@@ -220,6 +232,7 @@ Use logs de debug estratégicos para identificar onde o problema realmente está
 ### 3. Testes Abrangentes
 
 Sempre teste todos os cenários:
+
 - ✅ Caso de sucesso (token válido)
 - ❌ Caso sem token
 - ❌ Caso com token inválido
@@ -251,4 +264,3 @@ Se você encontrar problemas similares, verifique:
 - **Data:** Dezembro 2024
 - **Versão:** 0.0.7-beta
 - **Status:** ✅ Resolvido e testado
-

@@ -18,17 +18,17 @@ Guards in ElysiaJS-DI work similarly to NestJS guards. They implement the `CanAc
 To create a guard, implement the `CanActivate` interface:
 
 ```typescript
-import type { CanActivate, ExecutionContext } from '@igorcesarcode/elysiajs-di'
-import { Injectable } from '@igorcesarcode/elysiajs-di'
+import type { CanActivate, ExecutionContext } from "@igorcesarcode/elysiajs-di";
+import { Injectable } from "@igorcesarcode/elysiajs-di";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   async canActivate(executionContext: ExecutionContext): Promise<boolean> {
-    const { context } = executionContext
+    const { context } = executionContext;
 
     // Your guard logic here
     // Return true to allow access, false to deny
-    return true
+    return true;
   }
 }
 ```
@@ -38,15 +38,15 @@ export class AuthGuard implements CanActivate {
 Apply guards to routes using the `@UseGuards()` decorator:
 
 ```typescript
-import { Controller, Get, UseGuards } from '@igorcesarcode/elysiajs-di'
-import { AuthGuard } from './auth.guard'
+import { Controller, Get, UseGuards } from "@igorcesarcode/elysiajs-di";
+import { AuthGuard } from "./auth.guard";
 
-@Controller('/users')
+@Controller("/users")
 export class UserController {
   @UseGuards(AuthGuard)
-  @Get('/profile')
+  @Get("/profile")
   getProfile() {
-    return { message: 'Protected route' }
+    return { message: "Protected route" };
   }
 }
 ```
@@ -97,61 +97,63 @@ async canActivate(executionContext: ExecutionContext): Promise<boolean> {
 Here's a complete example of an authentication guard using JWT:
 
 ```typescript
-import type { CanActivate, ExecutionContext } from '@igorcesarcode/elysiajs-di'
-import { Injectable, JwtService } from '@igorcesarcode/elysiajs-di'
-import { AuthService } from './auth.service'
+import type { CanActivate, ExecutionContext } from "@igorcesarcode/elysiajs-di";
+import { Injectable, JwtService } from "@igorcesarcode/elysiajs-di";
+import { AuthService } from "./auth.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private authService: AuthService
-  ) { }
+  ) {}
 
   async canActivate(executionContext: ExecutionContext): Promise<boolean> {
-    const { context } = executionContext
+    const { context } = executionContext;
 
     // Extract token from Authorization header
-    const token = this.jwtService.extractTokenFromContext(context)
+    const token = this.jwtService.extractTokenFromContext(context);
 
     if (!token) {
-      context.set.status = 401
-      return false
+      context.set.status = 401;
+      return false;
     }
 
     try {
       // Verify token using JWT plugin from context
-      const payload = await this.jwtService.verifyFromContext(context)
+      const payload = await this.jwtService.verifyFromContext(context);
 
-      if (!payload || typeof payload !== 'object' || !('userId' in payload)) {
-        context.set.status = 401
-        return false
+      if (!payload || typeof payload !== "object" || !("userId" in payload)) {
+        context.set.status = 401;
+        return false;
       }
 
       // Get user from database
-      const user = await this.authService.findById((payload as { userId: number }).userId)
+      const user = await this.authService.findById(
+        (payload as { userId: number }).userId
+      );
 
       if (!user) {
-        context.set.status = 401
-        return false
+        context.set.status = 401;
+        return false;
       }
 
       // Attach user and payload to context for handler access
       if (!executionContext.data) {
-        executionContext.data = {}
+        executionContext.data = {};
       }
 
-      executionContext.data.user = user
-      executionContext.data.jwt = payload
+      executionContext.data.user = user;
+      executionContext.data.jwt = payload;
 
       // Also attach to Elysia context for convenience
-      ; (context as { user?: unknown; jwt?: unknown }).user = user
-      ; (context as { user?: unknown; jwt?: unknown }).jwt = payload
+      (context as { user?: unknown; jwt?: unknown }).user = user;
+      (context as { user?: unknown; jwt?: unknown }).jwt = payload;
 
-      return true
+      return true;
     } catch (error) {
-      context.set.status = 401
-      return false
+      context.set.status = 401;
+      return false;
     }
   }
 }
@@ -162,25 +164,25 @@ export class AuthGuard implements CanActivate {
 Here's an example of a role-based authorization guard:
 
 ```typescript
-import type { CanActivate, ExecutionContext } from '@igorcesarcode/elysiajs-di'
-import { Injectable } from '@igorcesarcode/elysiajs-di'
+import type { CanActivate, ExecutionContext } from "@igorcesarcode/elysiajs-di";
+import { Injectable } from "@igorcesarcode/elysiajs-di";
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(private requiredRole: string) { }
+  constructor(private requiredRole: string) {}
 
   async canActivate(executionContext: ExecutionContext): Promise<boolean> {
-    const { context, data } = executionContext
+    const { context, data } = executionContext;
 
     // Get user from context (set by AuthGuard)
-    const user = (data?.user || context.user) as { role?: string } | undefined
+    const user = (data?.user || context.user) as { role?: string } | undefined;
 
     if (!user || user.role !== this.requiredRole) {
-      context.set.status = 403
-      return false
+      context.set.status = 403;
+      return false;
     }
 
-    return true
+    return true;
   }
 }
 ```
@@ -211,13 +213,13 @@ Guards should set appropriate HTTP status codes:
 
 ```typescript
 if (!token) {
-  context.set.status = 401
-  return false
+  context.set.status = 401;
+  return false;
 }
 
 if (!hasPermission) {
-  context.set.status = 403
-  return false
+  context.set.status = 403;
+  return false;
 }
 ```
 
@@ -244,7 +246,7 @@ See the [JWT Service documentation](./jwt-service.md) for more details.
 If you encounter issues with guards, see the [Troubleshooting Guide](./troubleshooting-auth-guard.md).
 
 Common issues:
+
 - Guards not executing: Ensure guards are registered as providers
 - JWT plugin not available: Ensure JWT plugin is registered in module
 - Headers not accessible: Use `JwtService.extractTokenFromContext()` for proper header reading
-
