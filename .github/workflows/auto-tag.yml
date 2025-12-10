@@ -1,0 +1,96 @@
+name: Auto Tag on Version Change
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  create-tag:
+    name: Create Git Tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history to compare versions
+
+      - name: Get current version
+        id: current-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Get previous version
+        id: previous-version
+        run: |
+          # Get the version from the previous commit on main
+          PREVIOUS_VERSION=$(git show HEAD~1:package.json 2>/dev/null | node -p "JSON.parse(require('fs').readFileSync(0, 'utf-8')).version" 2>/dev/null || echo "")
+          if [ -z "$PREVIOUS_VERSION" ]; then
+            # If we can't get previous version, check if tag already exists
+            PREVIOUS_VERSION=""
+          fi
+          echo "previous=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: ${PREVIOUS_VERSION:-'N/A (first commit or unable to determine)'}"
+
+      - name: Check if version changed
+        id: version-changed
+        run: |
+          CURRENT="${{ steps.current-version.outputs.version }}"
+          PREVIOUS="${{ steps.previous-version.outputs.previous }}"
+
+          if [ "$CURRENT" != "$PREVIOUS" ] && [ -n "$CURRENT" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Version changed from '${PREVIOUS:-N/A}' to '$CURRENT'"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  Version unchanged or unable to determine change"
+          fi
+
+      - name: Check if tag already exists
+        id: tag-exists
+        if: steps.version-changed.outputs.changed == 'true'
+        run: |
+          VERSION="${{ steps.current-version.outputs.version }}"
+          TAG="v${VERSION}"
+
+          if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Tag $TAG already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✅ Tag $TAG does not exist, will create it"
+          fi
+
+      - name: Create and push tag
+        if: steps.version-changed.outputs.changed == 'true' && steps.tag-exists.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.current-version.outputs.version }}"
+          TAG="v${VERSION}"
+
+          echo "Creating tag: $TAG"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "$TAG" -m "Release $VERSION"
+          git push origin "$TAG"
+
+          echo "✅ Successfully created and pushed tag: $TAG"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🏷️ Auto Tag Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Current Version:** \`${{ steps.current-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Version:** \`${{ steps.previous-version.outputs.previous || 'N/A' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Changed:** ${{ steps.version-changed.outputs.changed == 'true' && '✅ Yes' || '❌ No' }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.version-changed.outputs.changed }}" == "true" ]; then
+            if [ "${{ steps.tag-exists.outputs.exists }}" == "true" ]; then
+              echo "- **Tag Status:** ⚠️ Tag \`v${{ steps.current-version.outputs.version }}\` already exists" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- **Tag Status:** ✅ Created tag \`v${{ steps.current-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi

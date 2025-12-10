@@ -363,7 +363,7 @@ For detailed documentation, see the [docs](./docs) folder:
 
 ## License
 
-MIT © 2024
+MIT © 2025
 
 ## Contributing
 
