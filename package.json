@@ -76,6 +76,15 @@
     "@elysiajs/opentelemetry": {
       "optional": true
     },
+    "@elysiajs/jwt": {
+      "optional": true
+    },
+    "@elysiajs/cors": {
+      "optional": true
+    },
+    "@elysiajs/cron": {
+      "optional": true
+    },
     "@opentelemetry/sdk-trace-node": {
       "optional": true
     },
@@ -87,6 +96,9 @@
     }
   },
   "devDependencies": {
+    "@elysiajs/cors": "^1.4.0",
+    "@elysiajs/cron": "^1.4.0",
+    "@elysiajs/jwt": "^1.4.0",
     "@elysiajs/openapi": "^1.4.0",
     "@elysiajs/opentelemetry": "^1.4.0",
     "@opentelemetry/exporter-trace-otlp-proto": "^0.208.0",

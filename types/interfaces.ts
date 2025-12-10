@@ -1,5 +1,8 @@
 import type { Elysia } from 'elysia'
 import type { ZodType } from 'zod'
+import type { CORSConfig } from '../plugins/cors.plugin'
+import type { CronConfig } from '../plugins/cron.plugin'
+import type { JWTConfig } from '../plugins/jwt.plugin'
 
 /**
  * OpenAPI route detail configuration
@@ -58,6 +61,18 @@ export interface RouteMetadata {
 }
 
 /**
+ * Plugin configurations for module-level registration
+ */
+export interface ModulePluginConfig {
+  /** JWT plugin configuration */
+  jwt?: JWTConfig
+  /** CORS plugin configuration */
+  cors?: CORSConfig
+  /** Cron plugin configuration */
+  cron?: CronConfig
+}
+
+/**
  * Metadata for module configuration
  */
 export interface ModuleMetadata {
@@ -69,6 +84,8 @@ export interface ModuleMetadata {
   providers?: Constructor[]
   /** Providers to export for other modules */
   exports?: Constructor[]
+  /** Plugin configurations for automatic registration */
+  plugins?: ModulePluginConfig
 }
 
 /**
@@ -130,6 +147,6 @@ export interface ElysiaContext<TBody = unknown, TParams = Record<string, string>
  * Module factory interface
  */
 export interface IModuleFactory {
-  registerModule(moduleClass: Constructor, app: Elysia): void
-  bootstrap(rootModule: Constructor, app: Elysia, options?: BootstrapOptions): void
+  registerModule(moduleClass: Constructor, app: Elysia): Promise<void>
+  bootstrap(rootModule: Constructor, app: Elysia, options?: BootstrapOptions): Promise<void>
 }

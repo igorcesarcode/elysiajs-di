@@ -1,21 +1,25 @@
-import 'reflect-metadata'
 import { Elysia } from 'elysia'
+import 'reflect-metadata'
 import { container } from 'tsyringe'
-import { MODULE_KEY, ROUTES_KEY, CONTROLLER_BASE_PATH_KEY } from '../decorators/constants'
+import { CONTROLLER_BASE_PATH_KEY, MODULE_KEY, ROUTES_KEY } from '../decorators/constants'
+import { getJWTMetadata } from '../decorators/jwt.decorator'
+import { registerCORS } from '../plugins/cors.plugin'
+import { registerCron } from '../plugins/cron.plugin'
+import { registerJWT } from '../plugins/jwt.plugin'
 import type {
-  ModuleMetadata,
-  RouteMetadata,
-  Constructor,
-  IModuleFactory,
   BootstrapOptions,
-  ErrorHandler
+  Constructor,
+  ErrorHandler,
+  IModuleFactory,
+  ModuleMetadata,
+  RouteMetadata
 } from '../types'
 import {
-  hasOnModuleInit,
-  hasOnApplicationBootstrap,
-  hasOnModuleDestroy,
   hasBeforeApplicationShutdown,
-  hasOnApplicationShutdown
+  hasOnApplicationBootstrap,
+  hasOnApplicationShutdown,
+  hasOnModuleDestroy,
+  hasOnModuleInit
 } from '../types'
 import { internalLogger } from './internal-logger'
 
@@ -238,7 +242,7 @@ export class ModuleFactory implements IModuleFactory {
    * @param moduleClass - The module class to register
    * @param app - The Elysia app instance
    */
-  registerModule(moduleClass: Constructor, app: Elysia): void {
+  async registerModule(moduleClass: Constructor, app: Elysia): Promise<void> {
     if (this.registeredModules.has(moduleClass)) {
       return
     }
@@ -255,9 +259,9 @@ export class ModuleFactory implements IModuleFactory {
 
     // 1. Register imported modules (recursively)
     if (metadata.imports) {
-      metadata.imports.forEach(importedModule => {
-        this.registerModule(importedModule, app)
-      })
+      for (const importedModule of metadata.imports) {
+        await this.registerModule(importedModule, app)
+      }
     }
 
     // 2. Register providers (services) in the DI container
@@ -272,7 +276,20 @@ export class ModuleFactory implements IModuleFactory {
       })
     }
 
-    // 3. Register controllers and their routes using Elysia plugins
+    // 3. Auto-register plugins if configured
+    if (metadata.plugins) {
+      if (metadata.plugins.jwt) {
+        await registerJWT(app, metadata.plugins.jwt)
+      }
+      if (metadata.plugins.cors) {
+        await registerCORS(app, metadata.plugins.cors)
+      }
+      if (metadata.plugins.cron) {
+        await registerCron(app, metadata.plugins.cron)
+      }
+    }
+
+    // 4. Register controllers and their routes using Elysia plugins
     if (metadata.controllers) {
       metadata.controllers.forEach(controllerClass => {
         const controllerPlugin = this.createControllerPlugin(controllerClass, moduleClass)
@@ -280,7 +297,7 @@ export class ModuleFactory implements IModuleFactory {
       })
     }
 
-    // 4. Register module instance for lifecycle (if it has lifecycle hooks)
+    // 5. Register module instance for lifecycle (if it has lifecycle hooks)
     const moduleInstance = new moduleClass()
     this.registerInstance(moduleInstance, 'module', moduleClass)
 
@@ -319,6 +336,9 @@ export class ModuleFactory implements IModuleFactory {
       const fullPath = basePath + route.path
       const handler = (controllerInstance as any)[route.handlerName].bind(controllerInstance)
 
+      // Check if route requires JWT
+      const jwtMetadata = getJWTMetadata(controllerClass.prototype, route.handlerName)
+
       // Build route options with validation schemas and OpenAPI detail
       const routeConfig: Record<string, any> = {}
 
@@ -331,15 +351,63 @@ export class ModuleFactory implements IModuleFactory {
         if (route.options.detail) routeConfig.detail = route.options.detail
       }
 
+      // Create route handler with JWT protection if needed
+      let routeHandler = handler
+
+      if (jwtMetadata) {
+        const jwtName = jwtMetadata.name
+        routeHandler = async (context: any) => {
+          // Get JWT plugin from context (Elysia JWT plugin adds jwt object with sign/verify methods)
+          const jwtPlugin = (context as any)[jwtName]
+
+          if (!jwtPlugin || typeof jwtPlugin.verify !== 'function') {
+            context.set.status = 401
+            return { error: 'JWT plugin not registered' }
+          }
+
+          // Extract token from Authorization header
+          const authHeader = context.headers.authorization || context.headers.Authorization
+          const token = authHeader?.replace(/^Bearer\s+/i, '')
+
+          if (!token && jwtMetadata.required) {
+            context.set.status = 401
+            return { error: 'Unauthorized: JWT token required' }
+          }
+
+          if (token) {
+            // Verify token
+            const verified = await jwtPlugin.verify(token)
+
+            if (!verified && jwtMetadata.required) {
+              context.set.status = 401
+              return { error: 'Unauthorized: Invalid JWT token' }
+            }
+
+            // Attach verified payload to context (merge with jwt object for convenience)
+            if (verified) {
+              // Merge verified payload into jwt object so handler can access both payload and sign method
+              Object.assign(jwtPlugin, verified)
+            } else if (jwtMetadata.required) {
+              context.set.status = 401
+              return { error: 'Unauthorized: Invalid JWT token' }
+            }
+          }
+
+          // Call original handler
+          return handler(context)
+        }
+      }
+
       // Register route in the plugin with or without validation
       if (Object.keys(routeConfig).length > 0) {
-        ; (plugin as any)[route.method](fullPath, handler, routeConfig)
+        ; (plugin as any)[route.method](fullPath, routeHandler, routeConfig)
       } else {
-        ; (plugin as any)[route.method](fullPath, handler)
+        ; (plugin as any)[route.method](fullPath, routeHandler)
       }
 
       // Log route mapping
-      internalLogger.log('RouterExplorer', `Mapped {${fullPath}, ${route.method.toUpperCase()}} route`)
+      const jwtInfo = jwtMetadata ? ' [JWT Protected]' : ''
+      internalLogger.log('RouterExplorer', `Mapped {${fullPath}, ${route.method.toUpperCase()}} route${jwtInfo}`)
     })
 
     return plugin
@@ -396,7 +464,7 @@ export class ModuleFactory implements IModuleFactory {
     this.setupErrorHandling(app)
 
     // Phase 3: Register all modules (this also registers controllers and providers)
-    this.registerModule(rootModule, app)
+    await this.registerModule(rootModule, app)
 
     // Phase 4: Call onModuleInit() on all instances
     await this.callLifecycleHook('onModuleInit')

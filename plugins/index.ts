@@ -1,7 +1,7 @@
 /**
  * ElysiaJS-DI Plugins
  * 
- * Optional integrations for OpenAPI and OpenTelemetry
+ * Optional integrations for OpenAPI, OpenTelemetry, JWT, CORS, and Cron
  */
 
 export {
@@ -19,4 +19,20 @@ export {
   type AxiomConfig,
   type SpanProcessorConfig
 } from './opentelemetry.plugin'
+
+export {
+  registerJWT,
+  type JWTConfig
+} from './jwt.plugin'
+
+export {
+  registerCORS,
+  type CORSConfig
+} from './cors.plugin'
+
+export {
+  registerCron,
+  type CronConfig,
+  type CronJob
+} from './cron.plugin'
 

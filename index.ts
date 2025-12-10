@@ -78,39 +78,21 @@ export * from './types'
 
 // Decorators
 export {
-  Module,
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Patch,
-  Singleton,
-  Injectable,
-  ROUTES_KEY,
-  MODULE_KEY,
-  CONTROLLER_BASE_PATH_KEY
+  Controller, CONTROLLER_BASE_PATH_KEY, Delete, Get, Injectable, JWT, JWT_REQUIRED_KEY, Module, MODULE_KEY, Patch, Post,
+  Put, ROUTES_KEY, Singleton
 } from './decorators'
 
 // Factory
-export { ModuleFactory, createModuleFactory, ApplicationLogger } from './factory'
+export { ApplicationLogger, createModuleFactory, ModuleFactory } from './factory'
 
-// Plugins (OpenAPI & OpenTelemetry)
+// Plugins (OpenAPI, OpenTelemetry, JWT, CORS, Cron)
 export {
-  registerOpenAPI,
-  createOpenAPIDetail,
-  SecuritySchemes,
-  type OpenAPIConfig,
-  registerOpenTelemetry,
-  registerAxiomTelemetry,
-  getCurrentSpan,
-  type OpenTelemetryConfig,
-  type AxiomConfig,
-  type SpanProcessorConfig
+  createOpenAPIDetail, getCurrentSpan, registerAxiomTelemetry, registerCORS, registerCron, registerJWT, registerOpenAPI, registerOpenTelemetry, SecuritySchemes, type AxiomConfig, type CORSConfig, type CronConfig,
+  type CronJob, type JWTConfig, type OpenAPIConfig, type OpenTelemetryConfig, type SpanProcessorConfig
 } from './plugins'
 
 // Re-export tsyringe container for advanced use cases
 export { container } from 'tsyringe'
 
 // Legacy exports (lowercase) - deprecated, use uppercase versions
-export { singleton, injectable } from 'tsyringe'
+export { injectable, singleton } from 'tsyringe'
