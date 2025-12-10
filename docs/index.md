@@ -16,6 +16,8 @@ Welcome to the ElysiaJS-DI documentation. This library brings NestJS-style archi
 
 3. [Features](./validation.md)
    - [Validation](./validation.md)
+   - [Guards](./guards.md)
+   - [JWT Service](./jwt-service.md)
    - [Lifecycle Hooks](./lifecycle.md)
    - [Logging](./logging.md)
 
@@ -42,6 +44,7 @@ Welcome to the ElysiaJS-DI documentation. This library brings NestJS-style archi
 @Put('/route')
 @Patch('/route')
 @Delete('/route')
+@UseGuards(GuardClass) // Protect routes with guards
 
 // Providers
 @Singleton()  // Single shared instance

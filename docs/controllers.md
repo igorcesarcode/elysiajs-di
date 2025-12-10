@@ -249,6 +249,38 @@ findAll({ set }: ElysiaContext) {
 }
 ```
 
+## Route Protection with Guards
+
+Guards allow you to protect routes and control access. Use the `@UseGuards()` decorator to apply guards to routes:
+
+```typescript
+import { Controller, Get, UseGuards } from '@igorcesarcode/elysiajs-di'
+import { AuthGuard } from './auth.guard'
+
+@Controller('/users')
+export class UserController {
+  @UseGuards(AuthGuard)
+  @Get('/profile')
+  getProfile({ user }: any) {
+    // user is attached by AuthGuard
+    return { user }
+  }
+
+  @UseGuards(AuthGuard, RoleGuard)
+  @Get('/admin')
+  getAdminData() {
+    return { message: 'Admin only' }
+  }
+}
+```
+
+Guards execute before the route handler and can:
+- Allow or deny access (return `true` or `false`)
+- Set HTTP status codes
+- Attach data to the context for use in handlers
+
+See the [Guards documentation](./guards.md) for more details.
+
 ## Error Handling
 
 Errors are automatically caught and formatted:
@@ -287,9 +319,10 @@ Validation errors return 400 with details:
 
 ```typescript
 import { z } from 'zod'
-import { Controller, Get, Post, Put, Delete } from '@igorcesarcode/elysiajs-di'
+import { Controller, Get, Post, Put, Delete, UseGuards } from '@igorcesarcode/elysiajs-di'
 import type { ElysiaContext } from '@igorcesarcode/elysiajs-di'
 import { UserService } from './user.service'
+import { AuthGuard } from './auth.guard'
 
 // Validation Schemas
 const CreateUserDto = z.object({

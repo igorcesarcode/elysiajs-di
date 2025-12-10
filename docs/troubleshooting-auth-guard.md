@@ -249,6 +249,6 @@ Se você encontrar problemas similares, verifique:
 ## Histórico
 
 - **Data:** Dezembro 2024
-- **Versão:** 0.0.6-beta
+- **Versão:** 0.0.7-beta
 - **Status:** ✅ Resolvido e testado
 

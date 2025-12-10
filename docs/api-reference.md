@@ -162,6 +162,38 @@ function Delete(path?: string, options?: ValidationOptions): MethodDecorator
 
 ---
 
+### @UseGuards(...guards)
+
+Applies guards to protect routes.
+
+```typescript
+function UseGuards(...guards: Constructor[]): MethodDecorator
+```
+
+**Parameters:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| guards | `Constructor[]` | Guard classes to apply |
+
+**Example:**
+
+```typescript
+@UseGuards(AuthGuard)
+@Get('/profile')
+getProfile() {
+  return { message: 'Protected' }
+}
+
+@UseGuards(AuthGuard, RoleGuard)
+@Get('/admin')
+getAdminData() {
+  return { message: 'Admin only' }
+}
+```
+
+---
+
 ### @Singleton()
 
 Marks a class as a singleton provider.
@@ -201,6 +233,70 @@ class RequestLogger {
 ---
 
 ## Classes
+
+### JwtService
+
+Service for signing and verifying JWT tokens.
+
+```typescript
+class JwtService {
+  setJwtPluginName(name: string): void
+  async sign(payload: Record<string, unknown>, context: { [key: string]: unknown }): Promise<string>
+  async verify(token: string, context: { [key: string]: unknown }): Promise<unknown | null>
+  async verifyFromContext(context: { [key: string]: unknown }): Promise<unknown | null>
+  extractToken(headers: Record<string, string | undefined>): string | null
+  extractTokenFromContext(context: { headers?: Record<string, string | undefined>, request?: Request, [key: string]: unknown }): string | null
+}
+```
+
+**Methods:**
+
+#### sign(payload, context)
+
+Signs a JWT token with the given payload.
+
+```typescript
+const token = await jwtService.sign(
+  { userId: 1, email: 'user@example.com' },
+  { jwt }
+)
+```
+
+#### verify(token, context)
+
+Verifies and decodes a JWT token.
+
+```typescript
+const payload = await jwtService.verify(token, context)
+```
+
+#### verifyFromContext(context)
+
+Convenience method that extracts and verifies token from context.
+
+```typescript
+const payload = await jwtService.verifyFromContext(context)
+```
+
+#### extractToken(headers)
+
+Extracts token from Authorization header.
+
+```typescript
+const token = jwtService.extractToken(headers)
+```
+
+#### extractTokenFromContext(context)
+
+Extracts token from Elysia context, handling multiple header sources.
+
+```typescript
+const token = jwtService.extractTokenFromContext(context)
+```
+
+See the [JWT Service documentation](./jwt-service.md) for more details.
+
+---
 
 ### ModuleFactory
 
@@ -283,6 +379,67 @@ class UserService {
 ---
 
 ## Interfaces
+
+### CanActivate
+
+Interface for route guards.
+
+```typescript
+interface CanActivate {
+  canActivate(context: ExecutionContext): boolean | Promise<boolean>
+}
+```
+
+**Example:**
+
+```typescript
+@Injectable()
+export class AuthGuard implements CanActivate {
+  async canActivate(executionContext: ExecutionContext): Promise<boolean> {
+    // Guard logic
+    return true
+  }
+}
+```
+
+---
+
+### ExecutionContext
+
+Context provided to guards during execution.
+
+```typescript
+interface ExecutionContext {
+  context: {
+    params: Record<string, string>
+    query: Record<string, string | undefined>
+    body: unknown
+    headers: Record<string, string | undefined>
+    request: Request
+    set: {
+      status?: number
+      headers: Record<string, string>
+    }
+    [key: string]: unknown
+  }
+  handler: string
+  controller: Constructor
+  controllerInstance: unknown
+  data?: Record<string, unknown>
+}
+```
+
+**Properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| context | `object` | Elysia request context |
+| handler | `string` | Handler method name |
+| controller | `Constructor` | Controller class constructor |
+| controllerInstance | `unknown` | Controller instance |
+| data | `Record<string, unknown>` | Data attached by guards |
+
+---
 
 ### ModuleMetadata
 
